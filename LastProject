@@ -1,0 +1,238 @@
+const fs = require('fs');
+const readline = require('readline');
+const { display_Movies, add_Movie, update_Movie, delete_Movie, search_Movies, filter_Movies } = require('./movieManagement');
+const { fetch_Movies } = require('./apiRequests');
+const { read_File, write_File } = require('./fileHandling');
+const { prompt_User, display_Message } = require('./userInteraction');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+function mainMenu() {
+  displayMessage('===== Movie Catalog Management =====');
+  displayMessage('1. Display Movie Catalog');
+  displayMessage('2. Add New Movie');
+  displayMessage('3. Update Movie Details');
+  displayMessage('4. Delete Movie');
+  displayMessage('5. Search Movies');
+  displayMessage('6. Filter Movies');
+  displayMessage('7. Fetch Movies from API');
+  displayMessage('0. Exit');
+  promptUser('Select an option: ', handleMenuOption);
+}
+
+function handleMenuOption(option) {
+  switch (option) {
+    case '1':
+      displayMovies();
+      break;
+    case '2':
+      addMovie();
+      break;
+    case '3':
+      updateMovie();
+      break;
+    case '4':
+      deleteMovie();
+      break;
+    case '5':
+      searchMovies();
+      break;
+    case '6':
+      filterMovies();
+      break;
+    case '7':
+      fetchMovies();
+      break;
+    case '0':
+      displayMessage('Goodbye!');
+      rl.close();
+      break;
+    default:
+      displayMessage('Invalid option. Please try again.');
+      mainMenu();
+      break;
+  }
+}
+
+function initializeApp() {
+    fs.readFile('movies.json', 'utf8', (error, data) => {
+        if (error) {
+          displayMessage(`Error: ${error.message}`);
+          displayMessage('Creating new movie catalog...');
+          const movies = [];
+          mainMenu();
+        } else {
+          const movies = JSON.parse(data);
+          mainMenu();
+        }
+      });
+}
+
+initializeApp();
+function displayMovies() {
+    if (movies.length === 0) {
+      displayMessage('Movie catalog is empty.');
+    } else {
+      displayMessage('Movie Catalog:');
+      movies.forEach((movie) => {
+        displayMessage(`Title: ${movie.title}`);
+        displayMessage(`Genre: ${movie.genre}`);
+        displayMessage(`Year: ${movie.year}`);
+        displayMessage('-----------------------');
+      });
+    }
+    mainMenu();
+  }
+  
+  function addMovie() {
+    promptUser('Enter the title of the movie: ', (title) => {
+      promptUser('Enter the genre of the movie: ', (genre) => {
+        promptUser('Enter the year of release: ', (year) => {
+          const newMovie = {
+            title: title,
+            genre: genre,
+            year: parseInt(year)
+          };
+          add_Movie(newMovie);
+          displayMessage('Movie added successfully!');
+          mainMenu();
+        });
+      });
+    });
+  }
+  
+  function updateMovie() {    
+      promptUser('Enter the title of the movie you want to update: ', (title) => {
+        const movieToUpdate = search_Movies(title);
+        if (movieToUpdate) {
+          displayMessage('Movie found! What details would you like to update?');
+          displayMessage('1. Update genre');
+          displayMessage('2. Update year');
+          displayMessage('0. Cancel');
+          promptUser('Select an option: ', (option) => {
+            switch (option) {
+              case '1':
+                promptUser('Enter the new genre: ', (genre) => {
+                  update_Movie(movieToUpdate, { genre: genre });
+                  displayMessage('Genre updated successfully!');
+                  mainMenu();
+                });
+                break;
+              case '2':
+                promptUser('Enter the new year: ', (year) => {
+                  update_Movie(movieToUpdate, { year: parseInt(year) });
+                  displayMessage('Year updated successfully!');
+                  mainMenu();
+                });
+                break;
+              case '0':
+                displayMessage('Update canceled.');
+                mainMenu();
+                break;
+              default:
+                displayMessage('Invalid option. Please try again.');
+                updateMovie();
+                break;
+            }
+          });
+        } else {
+          displayMessage('Movie not found.');
+          mainMenu();
+        }
+      });
+    }
+  
+  
+  
+  function deleteMovie() {
+    promptUser('Enter the title of the movie you want to delete: ', (title) => {
+      const movieToDelete = search_Movies(title);
+      if (movieToDelete) {
+        delete_Movie(movieToDelete);
+        displayMessage('Movie deleted successfully!');
+      } else {
+        displayMessage('Movie not found.');
+      }
+      mainMenu();
+    });
+  }
+  
+  function searchMovies() {
+    promptUser('Enter a search term: ', (searchTerm) => {
+      const searchResults = filter_Movies(searchTerm);
+      if (searchResults.length > 0) {
+        displayMessage('Search results:');
+        displayMovies(searchResults);
+      } else {
+        displayMessage('No movies found matching the search term.');
+      }
+      mainMenu();
+    });
+  }
+  
+  function filterMovies() {
+    promptUser('Enter a filter term: ', (filterTerm) => {
+      const filteredMovies = movies.filter((movie) => {
+        return movie.genre.toLowerCase() === filterTerm.toLowerCase();
+      });
+  
+      if (filteredMovies.length > 0) {
+        displayMessage('Filtered movies:');
+        displayMovies(filteredMovies);
+      } else {
+        displayMessage('No movies found matching the filter term.');
+      }
+      mainMenu();
+    });
+  }
+  
+  module.exports = {
+    displayMovies,
+    addMovie,
+    updateMovie,
+    deleteMovie,
+    searchMovies,
+    filterMovies,
+  };
+function fetchMovies() {
+  }
+  
+  module.exports = {
+    fetchMovies,
+  };
+function readFile(filename) {
+    return new Promise((resolve, reject) => {
+      fs.readFile(filename, 'utf8', (error, data) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(data);
+        }
+      });
+    });
+  }
+  
+  function writeFile(filename, data) {
+  }
+  
+  module.exports = {
+    readFile,
+    writeFile,
+  };
+function promptUser(question, callback) {
+    rl.question(question, (answer) => {
+      callback(answer);
+    });
+  }
+  function displayMessage(message) {
+    console.log(message);
+  }
+  
+  module.exports = {
+    promptUser,
+    displayMessage,
+  };
+        
